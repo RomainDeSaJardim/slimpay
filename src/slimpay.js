@@ -35,13 +35,22 @@ class SlimPay {
 
     config (config) {
         if(!config.user) {
-            console.log('new error, no config.user');
-            return new Error('config must have user');
+            if(!config.appID) {
+                console.log('new error, no config.appID or config.user');
+                return new Error('config must have one of those authentication methods : user/password or appID/appSecret');
+            }
+            if(!config.appSecret) {
+                console.log('new error, no config.appSecret');
+                return new Error('config must have one of those authentication methods : user/password or appID/appSecret');
+            }
         }
-        if(!config.password) {
+
+        if(!config.password && config.user) {
             console.log('new error, no config.password');
-            return new Error('config must have password');
+            return new Error('config must have one of those autentication methods : user/password or appID/appSecret');
         }
+        this.appID = config.appID;
+        this.appSecret = config.appSecret;
         this.user = config.user;
         this.password = config.password;
     }
@@ -58,19 +67,32 @@ class SlimPay {
 
     init () {
         this.endPoint = this.env === 'production'
-            ? "https://api.slimpay.net/"
+            ? 'https://api.slimpay.net/'
             : 'https://api-sandbox.slimpay.net/';
         var authPath = 'oauth/token?grant_type=client_credentials&scope=api';
         this.authURI = this.endPoint + authPath;
+
         this.authConfig = {
-            uri: this.authURI,
-            auth:{
+            method: 'GET'
+        }
+        if(this.appID && this.appSecret) {
+            var credentials = new Buffer(this.appID + ':' + this.appSecret).toString('base64');
+            this.authConfig.headers = {
+                'Accept': 'application/json',
+                'Authorization': 'Basic ' + credentials,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            };
+            this.authConfig.method = 'POST';
+        } else {
+            this.authConfig.auth = {
                 'user': this.user,
                 'pass': this.password,
                 'sendImmediately': false
-            },
-            method: 'GET'
-        };
+            };
+        }
+
+
+        this.authConfig.uri = this.authURI;
 
         this.getOrRefreshToken();
     }
@@ -85,6 +107,7 @@ class SlimPay {
     getOrRefreshToken () {
         return this.getAuthenticationToken(this.authConfig)
             .then( result => {
+                console.log(result);
                 this.tokenConfig = result;
                 this.tokenConfig['seconds'] = Date.now() / 1000;
                 return result.token;
