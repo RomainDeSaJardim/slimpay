@@ -94,7 +94,7 @@ class SlimPay {
 
         this.authConfig.uri = this.authURI;
 
-        this.getOrRefreshToken();
+        return this.getOrRefreshToken();
     }
 
     tokenIsNotValid () {
