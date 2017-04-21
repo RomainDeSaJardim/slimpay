@@ -107,7 +107,6 @@ class SlimPay {
     getOrRefreshToken () {
         return this.getAuthenticationToken(this.authConfig)
             .then( result => {
-                console.log(result);
                 this.tokenConfig = result;
                 this.tokenConfig['seconds'] = Date.now() / 1000;
                 return result.token;
