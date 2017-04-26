@@ -154,13 +154,28 @@ class SlimPay {
         };
     }
 
-    slimPayApi () {
+    slimPayApi (endPoint) {
         return this.checkToken()
-            .then( requestOptions => traverson.from(this.endPoint).jsonHal().withRequestOptions(requestOptions));
+            .then( requestOptions => traverson.from(endPoint ? endPoint : this.endPoint).jsonHal().withRequestOptions(requestOptions));
     }
 
     getLinks () {
         return this.slimPayApi()
+            .then( api => {
+                return new Promise((resolve, reject) => {
+                    api.get((err, res, traversal) => {
+                        if (err) reject(err);
+                        else {
+                            var body = JSON.parse(res.body);
+                            resolve({body, traversal});
+                        };
+                    });
+                });
+            })
+    }
+
+    get (link) {
+        return this.slimPayApi(link)
             .then( api => {
                 return new Promise((resolve, reject) => {
                     api.get((err, res, traversal) => {
