@@ -20,7 +20,7 @@ function controleResult (err, res, traversal, resolve, reject) {
     } else {
         var body = JSON.parse(res.body);
         if (body.code){
-            reject(result);
+            reject(body);
         } else {
             resolve({body, traversal});
         }
